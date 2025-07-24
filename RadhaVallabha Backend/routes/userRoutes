@@ -1,0 +1,17 @@
+const express = require("express");
+const { upload } = require("../middlewares/uploadMiddleware");
+const { uploadProfileImage, updateProfile ,getAllUsers,getUserById,updateUser} = require("../controllers/userController");
+const { verifyToken } = require("../middlewares/authMiddleware");
+
+
+const router = express.Router();
+
+// router.post("/upload-profile-image/:userId", upload.single("profileImage"), uploadProfileImage);
+// router.put("/update-profile/:userId", updateProfile);
+router.post("/upload-profile-image/:userId", verifyToken, upload.single("profileImage"), uploadProfileImage);
+router.put("/update-profile/:userId", verifyToken, updateProfile);
+router.get('/all', getAllUsers);
+router.get('/:id', getUserById);
+router.post('/update', updateUser);
+
+module.exports = router;
