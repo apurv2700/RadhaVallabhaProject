@@ -5,7 +5,7 @@ exports.uploadProfileImage = async (req, res) => {
   const { userId } = req.params;
   if (!req.file) return res.status(400).json({ message: "No file uploaded" });
 
-  const imageUrl = `http://192.168.1.47:3000/uploads/${req.file.filename}`;
+  const imageUrl = `http://192.168.1.43:3000/uploads/${req.file.filename}`;
   try {
     await db.collection("users").doc(userId).update({ profileImage: imageUrl });
     res.json({ message: "Profile image uploaded", imageUrl });

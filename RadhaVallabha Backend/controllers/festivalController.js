@@ -111,7 +111,7 @@ exports.generateCoupon  =  async (req, res) => {
       numDevotees,
       festivalId,
       festivalName,
-      createdAt: new Date(),
+      createdAt:admin.firestore.FieldValue.serverTimestamp(),
       location: userLocation,
       isActive: true,
       status: 'VALID'
@@ -158,9 +158,47 @@ exports.generateCoupon  =  async (req, res) => {
 
 
 // GET /api/coupon/:userId/:couponId
+exports.getCouponByUserId = async (req, res) => {
+  const { userId } = req.params;
+  console.log(userId);
+
+  try {
+    const couponQuery = await db
+      .collection('coupons')
+      .where('userId', '==', userId)
+      .where('isActive', '==', true)
+      .orderBy('createdAt', 'desc') 
+      .limit(1)
+      .get();
+
+    if (couponQuery.empty) {
+      return res.status(200).json({ message: 'No active coupon found for this user' });
+    }
+
+    const doc = couponQuery.docs[0];
+    const coupon = doc.data();
+    const couponId = doc.id;
+    console.log(doc.id);
+    // Get festival details
+    const festivalDoc = await db.collection('prasadam_festivals').doc(coupon.festivalId).get();
+    const festivalData = festivalDoc.exists ? festivalDoc.data() : null;
+
+    return res.status(200).json({
+      message: 'Latest active coupon fetched successfully',
+      coupon,
+      couponId,
+      festivalDetails: festivalData,
+    });
+
+  } catch (error) {
+    console.error('Error fetching coupon:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
 exports.getCouponById = async (req, res) => {
   const { userId, couponId } = req.params;
-  console.log(userId,couponId);
+  
 
   try {
     const docRef = db.collection('coupons').doc(couponId);
@@ -254,5 +292,72 @@ exports.softdeletefestival = async (req, res) => {
   } catch (error) {
     console.error('Soft delete failed:', error);
     return res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+
+
+// Scan QR
+exports.scanQR = async (req, res) => {
+  const { qrId } = req.params;
+  console.log(qrId);
+
+  try {
+    const qrDocRef = db.collection('coupons').doc(qrId); // your QR collection name
+    const doc = await qrDocRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'QR not found' });
+    }
+
+    // Optional: Check if already used
+    const qrData = doc.data();
+    if (qrData.status === 'Used' || qrData.isActive === false) {
+      return res.status(400).json({ message: 'QR already used or inactive' });
+    }
+
+    // Update the QR status
+    await qrDocRef.update({
+      status: 'USED',
+      isActive: false,
+      usedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({ message: 'QR marked as used' });
+  } catch (err) {
+    console.error('Error updating QR:', err);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+exports.outOfLocation = async (req, res) => {
+  const { qrId } = req.params;
+ 
+
+  try {
+    const qrDocRef = db.collection('coupons').doc(qrId); // your QR collection name
+    const doc = await qrDocRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'QR not found' });
+    }
+
+    // Optional: Check if already used
+    const qrData = doc.data();
+    if (qrData.status === 'Invalid' || qrData.isActive === false) {
+      return res.status(400).json({ message: 'QR already Invalid or inactive' });
+    }
+
+    // Update the QR status
+    await qrDocRef.update({
+      status: 'INVALID',
+      isActive: false,
+      usedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+
+    res.json({ message: 'QR marked as used' });
+  } catch (err) {
+    console.error('Error updating QR:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 };
