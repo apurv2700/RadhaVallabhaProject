@@ -8,6 +8,7 @@ import {
   TextInput,
   View
 } from 'react-native';
+
 import QRCode from 'react-native-qrcode-svg';
 import { useLocalSearchParams } from 'expo-router';
 import CustomTabBar from '../../components/tab';
@@ -20,7 +21,8 @@ import {useState,useEffect} from 'react';
 
 export default function PrasadamCoupon() {
     useLocationChecker()
-    const { couponId } = useLocalSearchParams();
+     
+    const { couponId} = useLocalSearchParams();
    const [coupon, setCoupon] = useState(null);
    const [festival,setFestivals] =useState('')
    const [loading, setLoading] = useState(true);
@@ -28,6 +30,7 @@ export default function PrasadamCoupon() {
    
 useEffect(() => {
   const fetchCoupon = async () => {
+    
     try {
       if (!couponId) return;
 
@@ -43,6 +46,7 @@ useEffect(() => {
         setFestivals(response.data.festivalDetails);
       } else {
         // Coupon inactive or not valid — don't show error, just skip
+      
         setCoupon(null);
         setFestivals(null);
       }
@@ -133,7 +137,7 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     alignItems: 'center',
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   flowerTopLeft: {
     position: 'absolute',
@@ -189,7 +193,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   noticeBox: {
-    marginTop: 10,
+    marginTop: height*0.02,
     backgroundColor: '#2d2d2d',
     width: width * 0.9,
     padding: 15,

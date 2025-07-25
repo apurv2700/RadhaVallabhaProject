@@ -20,6 +20,8 @@ const CouponScreen = () => {
     const [userId ,setUserId] =useState(null);
 useEffect(() => {
   const initializeApp = async () => {
+
+  
     await Promise.all([
       fetchActiveFestival(),
       getUserLocation(),
@@ -115,8 +117,7 @@ const handleGenerateCoupon = async () => {
     if (response.ok) {
       alert('Coupon generated!');
      await AsyncStorage.setItem('couponId', data.couponId);
-
-      router.push({ pathname: './gen_coupon', params: { couponId: data.couponId } });
+      router.replace({ pathname: './gen_coupon', params: { couponId: data.couponId } });
     } else {
       alert(data.message || 'Coupon generation failed.');
     }
@@ -183,7 +184,7 @@ const handleGenerateCoupon = async () => {
           <Text style={styles.generateText} >🎟 Generate Coupon</Text>
         </TouchableOpacity>
 
-        <View style={styles.divider2} />
+      
 
         {/* Notice */}
         <View style={styles.noticeBox}>
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginTop: 25,
     alignItems: 'center',
-    top:height*0.07
+    top:height*0.03
   },
   generateText: {
     color: '#fff',
@@ -290,7 +291,7 @@ noticeBox: {
   backgroundColor: '#333',
   borderRadius: width * 0.025,      // ~10 for most devices
   padding: width * 0.05,            // ~20 padding based on width
-  marginTop: height * 0.1,         // 2% vertical spacing
+  marginTop: height * 0.055,         // 2% vertical spacing
   marginHorizontal: width * 0.05,   // 5% horizontal spacing (optional)
 },
   noticeText: {
@@ -335,12 +336,5 @@ noticeBox: {
   marginVertical: 8,
    top:height*0.02
 },
-  divider2: {
-  height: 2,
-  backgroundColor: '#888',
-  width: '60%',
-  alignSelf: 'center',
-  marginVertical: 8,
-   top:height*0.09
-},
+
 });

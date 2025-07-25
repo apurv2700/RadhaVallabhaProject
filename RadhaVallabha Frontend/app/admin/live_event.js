@@ -40,7 +40,7 @@ const LiveEventDashboard = () => {
    const [loading, setLoading] = useState(false);
    const totalGenerated = coupons.length;
    const usedCount = coupons.filter(coupon => coupon.status === 'Used' ).length;
-   const inValidatedCount = coupons.filter(coupon => coupon.status === 'inValid' ).length;
+   const inValidatedCount = coupons.filter(coupon => coupon.status === 'INVALID' ).length;
    const activeCount = coupons.filter(coupon => coupon.isActive ).length;
 
 

@@ -1,5 +1,6 @@
 import * as Location from 'expo-location';
 import { useEffect, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 
@@ -10,6 +11,7 @@ const BISP_BHOPAL = {
 
 export default function useLocationChecker() {
   const intervalRef = useRef(null);
+   
 
   useEffect(() => {
     (async () => {
@@ -37,6 +39,7 @@ export default function useLocationChecker() {
         BISP_BHOPAL.latitude,
         BISP_BHOPAL.longitude
       );
+      const existingCouponId = await AsyncStorage.getItem('couponId');
 
       console.log("User is", distance, "meters away");
 
@@ -44,7 +47,26 @@ export default function useLocationChecker() {
         console.log("✅ User is at the target location (within 50 meters)");
         // You can perform actions here (e.g. send API, mark attendance)
       } else {
-        console.warn("❌ User is NOT at the target location");
+          try {
+    const response = await fetch(`http://192.168.1.43:3000/api/user/location/${existingCouponId}`, {
+      method: 'PATCH', 
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+      await AsyncStorage.removeItem('couponId');
+      console.log('QR marked as Invalid:', result);
+    } else {
+      console.warn('Failed to mark as Invalid:', result.message);
+   
+    }
+  } catch (error) {
+    console.error('Error using QR:', error);
+  }
       }
     } catch (e) {
       console.error("Error checking location", e);

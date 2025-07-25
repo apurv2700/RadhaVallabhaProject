@@ -29,20 +29,15 @@ const Header = () => {
 
   
 const handleCouponPress = async () => {
-  const couponID = await AsyncStorage.getItem('couponId');
 
-  if (!couponID) {
-    // No couponId saved locally
-    router.push('../coupon/generate_cou');
-    return;
-  }
 
   try {
-    const response = await axios.get(`http://192.168.1.43:3000/api/coupon/${userId}/${couponID}`);
+    const response = await axios.get(`http://192.168.1.43:3000/api/coupon/${userId}`);
     const fetchedCoupon = response.data.coupon;
-
+    const couponID =  response.data.couponId;
+    
     if (fetchedCoupon) {
-      setCoupon(fetchedCoupon);  // Optional: for later use
+      setCoupon(fetchedCoupon);
       router.push({
         pathname: '../coupon/gen_coupon',
         params: { couponId: couponID },

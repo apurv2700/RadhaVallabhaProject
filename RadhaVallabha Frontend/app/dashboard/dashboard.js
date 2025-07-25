@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
+import useLocationChecker from '../../hooks/useLocationChecker';
 import {
   Animated,
   Dimensions,
@@ -22,6 +23,7 @@ const { width,height} = Dimensions.get('window');
 
 export default function WelcomeTempleScreen({ isDarkMode, toggleTheme }) {
   useAuthGuard(); //Protects this screen
+   useLocationChecker()
   const router = useRouter();
 
   // correct place for scrollAnim

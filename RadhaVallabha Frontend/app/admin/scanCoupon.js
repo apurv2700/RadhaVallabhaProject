@@ -1,79 +1,117 @@
-// import React, { useState, useEffect } from 'react';
-// import { Text, View, StyleSheet, Alert } from 'react-native';
-// import { BarCodeScanner } from 'expo-barcode-scanner';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useRouter } from 'expo-router';
 
-// export default function QRScannerScreen() {
-//   const [hasPermission, setHasPermission] = useState(null);
-//   const [scanned, setScanned] = useState(false);
 
-//   useEffect(() => {
-//     (async () => {
-//       const { status } = await BarCodeScanner.requestPermissionsAsync();
-//       setHasPermission(status === 'granted');
-//     })();
-//   }, []);
+export default function QRScanner() {
+    const router = useRouter();
 
-//   const handleBarCodeScanned = ({ type, data }) => {
-//     if (!scanned) {
-//       setScanned(true);
-//       Alert.alert('Scanned!', `Data: ${data}`, [
-//         { text: 'OK', onPress: () => setScanned(false) },
-//       ]);
-//     }
+  const [permission, requestPermission] = useCameraPermissions();
+  const [cameraReady, setCameraReady] = useState(false);
+  const cameraRef = useRef(null);
+
+const handleBarCodeScanned = async ({ data }) => {
+  console.log('QR Code scanned:', data); // this `data` should be the QR ID like "dba77f46-..."
+ 
+
+  try {
+    const response = await fetch(`http://192.168.1.43:3000/api/use/${data}`, {
+      method: 'PATCH', 
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    const result = await response.json();
+
+    if (response.ok) {
+         await AsyncStorage.removeItem('couponId');
+      router.push('../coupon/generate_cou');
+
+      console.log('QR marked as used:', result);
+    } else {
+      console.warn('Failed to mark as used:', result.message);
+      
+    }
+  } catch (error) {
+    console.error('Error using QR:', error);
+  }
+};
+
+
+
+//   const handleBarCodeScanned = ({ data }) => {
+//     console.log('QR Code scanned:', data);
+//     updateQRStatus(data);
 //   };
 
-//   if (hasPermission === null) {
-//     return (
-//       <View style={styles.centered}>
-//         <Text>Requesting for camera permission...</Text>
-//       </View>
-//     );
-//   }
-//   if (hasPermission === false) {
-//     return (
-//       <View style={styles.centered}>
-//         <Text>No access to camera</Text>
-//       </View>
-//     );
-//   }
+  useEffect(() => {
+    if (!permission?.granted) {
+      requestPermission();
+    }
+  }, []);
 
-//   return (
-//     <View style={styles.container}>
-//       <BarCodeScanner
-//         onBarCodeScanned={scanned ? undefined : handleBarCodeScanned}
-//         style={StyleSheet.absoluteFillObject}
-//       />
-//       <View style={styles.textContainer}>
-//         <Text style={styles.scanText}>Scan the QR Code</Text>
-//       </View>
-//     </View>
-//   );
-// }
+  if (!permission) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>Requesting camera permission...</Text>
+      </View>
+    );
+  }
 
-// const styles = StyleSheet.create({
-//   container: {
-//     flex: 1,
-//   },
-//   centered: {
-//     flex: 1,
-//     justifyContent: 'center',
-//     alignItems: 'center',
-//   },
-//   textContainer: {
-//     position: 'absolute',
-//     top: 50,
-//     left: 0,
-//     right: 0,
-//     alignItems: 'center',
-//     zIndex: 1,
-//   },
-//   scanText: {
-//     fontSize: 18,
-//     color: 'white',
-//     backgroundColor: 'rgba(0,0,0,0.6)',
-//     paddingHorizontal: 16,
-//     paddingVertical: 10,
-//     borderRadius: 8,
-//     textAlign: 'center',
-//   },
-// });
+  if (!permission.granted) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text style={styles.loadingText}>No access to camera</Text>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <CameraView
+        style={StyleSheet.absoluteFillObject}
+        onBarcodeScanned={handleBarCodeScanned}
+        barcodeScannerSettings={{
+          barcodeTypes: ['qr'],
+        }}
+        onCameraReady={() => setCameraReady(true)}
+        ref={cameraRef}
+      />
+      {cameraReady && (
+        <View style={styles.textContainer}>
+          <Text style={styles.scanText}>Scan the QR Code</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#999',
+  },
+  textContainer: {
+    position: 'absolute',
+    bottom: 80,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 12,
+    borderRadius: 8,
+  },
+  scanText: {
+    color: '#fff',
+    fontSize: 18,
+  },
+});
